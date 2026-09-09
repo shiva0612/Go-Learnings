@@ -1,0 +1,911 @@
+
+/*
+	1bit
+	1byte = 8bits
+
+	1024bits = 1kbits --> internets speed 1kbps = 1kilo bits /sec = 1024 bits/sec => 1024/8=128bytes/sec
+	1024*1024bits = 1mbits - 10^6
+	1024*1024*1024bits = 1gbits - 10^9
+	1024*1024*1024*1024bits = 1tbits - 10^12
+
+	1024bytes = 1kBytes
+	1024*1024bytes = 1mBytes
+	1024*1024*1024bytes = 1gBytes
+	1024*1024*1024*1024bytes = 1tBytes
+
+	from quora ...
+	1byte=8bits..
+	1 KB=kilo byte=1024bytes=8196 bits.
+	1 Kb=kilo bits=1024bits/8 bits=128 bytes.
+*/
+
+func representation_bytes() {
+	//1<<10 = 1_00000_00000 =  2^10 = 1024
+
+	a := 1 << 10       //1kb
+	b := 100 * 1 << 10 //100kb
+	c := 1 << 20       //1mb
+	d := 100 * 1 << 20 //100mb
+	e := 1 << 30       //1gb
+
+	fmt.Println(a, b, c, d, e)
+}
+
+func bits_bytes() {
+	a := 1024
+	b := 1 << 10        //int(1 00000 00000) = 1024 is stored as int
+	fmt.Println(a == b) //true
+}
+
+
+func bitwise_op() {
+	var a uint = 60 /* 60 = 0011 1100 */
+	var b uint = 13 /* 13 = 0000 1101 */
+	var c uint = 0
+
+	c = a & b /* 12 = 0000 1100 */
+	fmt.Printf("Line 1 - Value of c is %d\n", c)
+
+	c = a | b /* 61 = 0011 1101 */
+	fmt.Printf("Line 2 - Value of c is %d\n", c)
+
+	c = a ^ b /* 49 = 0011 0001 */
+	fmt.Printf("Line 3 - Value of c is %d\n", c)
+
+	c = a << 2 /* 240 = 1111 0000 */
+	//since uint has capacity of 8 bits, extra zeros added to right push left ones out
+	fmt.Printf("Line 4 - Value of c is %d\n", c)
+
+	c = a >> 2 /* 15 = 0000 1111 */
+	//since uint has capacity of 8 bits, extra zeros added to left push right ones out
+	fmt.Printf("Line 5 - Value of c is %d\n", c)
+}
+
+--------------------------------------------------------------------------------------------
+var a int // in 32 bit system is 32/8 = 4 bytes 
+var a int // in 64 bit system is 64/8 = 8 bytes 
+
+/*
+
+	int32
+	Minimum value (-2^31) in binary:  - 10000000 00000000 00000000 00000000
+	Maximum value (2^31 - 1) in binary: 01111111 11111111 11111111 11111111
+
+	while storing positive value max you store is 2^31 - 1
+	here the first bit is 0
+	now why do u want to waste first bit again for negative number hence we take that into value instead of sign bit
+	min number is -2^31
+	---
+	uint32
+	Minimum value (0)
+	Maximum value (2^32 - 1) in binary: 11111111 11111111 11111111 11111111
+
+*/
+
+--------------------------------------------------------------------------------------------
+What "64-bit system" actually means for pointers
+
+When we call a system "64-bit," the most relevant thing for this discussion is: the native word size is 64 bits,
+and memory addresses are 64 bits wide.
+A pointer's entire job is to hold a memory address — so a pointer's size is tied directly to how many bits the system uses to address memory.
+
+64-bit system → addresses are 64 bits wide → a pointer needs 64 bits to store one → 64 bits = 8 bytes
+32-bit system → addresses are 32 bits wide → a pointer needs 32 bits to store one → 32 bits = 4 bytes
+
+var a int32  // ALWAYS 4 bytes, on every platform, period
+var b int64  // ALWAYS 8 bytes, on every platform, period
+var c int8   // ALWAYS 1 byte
+
+var d int      // 8 bytes on 64-bit systems, 4 bytes on 32-bit systems
+var e uint     // 8 bytes on 64-bit systems, 4 bytes on 32-bit systems
+var f uintptr  // 8 bytes on 64-bit systems, 4 bytes on 32-bit systems
+
+
+--------------------------------------------------------------------------------------------
+package main
+
+func main() {
+	m := map[int][]byte{}
+	for i := range 100 {
+		m[i] = make([]byte, 10<<20) //10MB
+	}
+	//size of the map is
+}
+
+type sliceHeader struct {
+	Data uintptr // in 64 bit system this pointer is 64 bit = 8 bytes
+	Len  int     // in 64 bit system this pointer is 64 bit = 8 bytes
+	Cap  int     // in 64 bit system this pointer is 64 bit = 8 bytes
+}
+
+/*
+so entire slice is of 8+8+8 = 24 bytes
+above map has
+ 	100 * 8 bytes = 800 bytes
+    100 * 24 bytes = 2400 bytes
+	total          = 3200 bytes
+
+and the actual size is stored in the heap
+*/
+
+------------------------------------------------------------------------------------------------------
+//floating point number issue - its every where not just in golang 
+package main
+
+import (
+	"fmt"
+	"math"
+
+	"github.com/shopspring/decimal"
+)
+
+func main() {
+	simple()
+	f1()
+	f2()
+}
+
+func simple() {
+	var a, b float64
+	a, b = 0.1, 0.2
+	sum := a + b
+	fmt.Println(sum)          //0.30000000000000004 -> reason -> decimal numbers are represented in binary accurately
+	fmt.Printf("%.1f\n", sum) //0.3 -> every time you print use this notation
+}
+
+func f1() {
+	var a, b float64
+	a, b = 0.1, 0.2
+	result := a + b
+	rounded := math.Round(result*10) / 10
+	fmt.Println(rounded) // 0.3
+}
+
+func f2() {
+
+	a := decimal.NewFromFloat(0.1)
+	b := decimal.NewFromFloat(0.2)
+	sum := a.Add(b)
+	fmt.Println(sum) // 0.3
+}
+
+------------------------------------------------------------------------------------------------------
+    select {} // waits forever
+// mostly used for testing
+------------------------------------------------------------------------------------------------------
+//IO
+strings.NewReader(s string)
+bytes.NewReader(b []byte)
+
+both of the above take a initial value
+you can keep reading from them 
+	all at once (or)
+	n bytes 
+they have 
+	len() - length of the un-read bytes left
+	size() - total length of the input given while creating this reader 
+
+here, you can only read the initial string you have added 
+you cannot add anything more to this  
+
+// ------------
+strings.NewBuilder -- this is nothing but writer 
+you can keep writing into this 
+// ------------
+bytes.NewBuffer(s string)
+
+here you can read the initial string & also can add extra byte on the go 
+this is both reader and writer 
+
+this cannot be used as buffer for large contents 
+
+// ------------ buf io ----------
+bufio.NewReaderWithSize(reader,10)
+	size gives 10, the size of the buffer 
+	buffered() gives how many byte that can be read from current buffer 
+	create []byte of size 10 and read
+	[]byte 20 & read will still read 10, if you want to read 20 (use ReadFull())
+
+bufio.NewWriterWithSize(writer,10)
+	write()
+	flush()
+
+
+
+
+------------------------------------------------------------------------------------------------------
+//slog logging
+
+func setup_logger() {
+	options := &slog.HandlerOptions{
+		Level:     slog.LevelDebug,
+		AddSource: true,
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			if a.Key == slog.TimeKey {
+				return slog.String(slog.TimeKey, a.Value.Time().Format(time.TimeOnly))
+			}
+			return a
+		},
+	}
+	jsnHandler := slog.NewJSONHandler(os.Stdout, options)
+	log := slog.New(jsnHandler)
+	slog.SetDefault(log)
+}
+func main() {
+	//setup
+	setup_logger()
+
+	//logging
+	slog.Info("this is msg")
+	slog.Info("this is msg", "key", "value", "key2", "value2")
+
+	type M map[string]any
+	slog.Info("printing json",
+		"key", M{"name": "shiva", "age": 26},
+	)
+
+	jsn, _ := json.Marshal(M{"name": "shiva", "age": 26})
+	slog.Info("printing json",
+		"key", jsn, //this will print base64 encoded value of json
+	)
+
+}
+
+------------------------------------------------------------------------------------------------------
+//loading env
+func working_with_env() {
+	gotenv.Load(".env")
+	os.Setenv("NAME", "gopher")
+	os.Getenv("NAME")
+	os.Environ() //gives []string "key=value"
+}
+------------------------------------------------------------------------------------------------------
+//file operations 
+/*
+dont forget this, specify whether to open file in read/write/both -> else you will get bad file descriptor error
+
+os.O_WRONLY: This flag specifies that the file should be opened in write-only mode. It allows writing data to the file but doesn't permit reading from it.
+os.O_CREATE: create the file if does not exist
+os.O_APPEND: append the new writes at the end
+os.O_TRUNC: clear the file content & write fresh
+*/
+func create_append_file() {
+	var err error
+	_, err = os.OpenFile("op.go", os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		panic(err)
+	}
+	_, err = os.OpenFile("op.go", os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		panic(err)
+	}
+	_, err = os.OpenFile("op.go", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		panic(err)
+	}
+}
+
+------------------------------------------------------------------------------------------------------
+clear(m) # m is map - it shall actually clear the map len(m) after this is 0
+
+clear(s) # s is slice, s=[1,2,3] after clear it shall be [0,0,0]
+
+
+// After filling and processing...
+Important - this will explain why u need to use a[:0] instead of clear
+func main() {
+	a := []int{1, 2, 3}
+	a = a[:0]
+	fmt.Println(a) //[]
+	fmt.Println(len(a)) //0
+	fmt.Println(cap(a)) //3
+
+	b := []int{1, 2, 3}
+	clear(b)
+	fmt.Println(b) //[0,0,0]
+	fmt.Println(len(b)) //3
+	fmt.Println(cap(b)) //3
+}
+
+
+func copying_slices_by_value() {
+
+	a := []int{0, 1}
+	b := make([]int, len(a))
+	copy(b, a)
+	b[0] = 1
+	fmt.Println(a) //01
+	fmt.Println(b) //11
+}
+
+
+------------------------------------------------------------------------------------------------------
+//updating go version 
+download the tar
+double click to unzip
+a new folder "go" shall be created 
+
+
+// this will allow the binaries downloaded to be executed 
+xattr -cr go/pkg/tool/darwin_arm64
+xattr -cr go/bin
+
+in zprofile change the GOROOT
+vs code > Go extension > edit settings.json > edit go version
+
+update go pls tools 
+reload window
+------------------------------------------------------------------------------------------------------
+/*
+	c := context.Background()
+	c = context.TODO()
+
+	context.WithValue()
+	context.WithCancel()
+	context.WithDeadline()
+	context.WithTimeout()
+
+if parent context is cancelled => child is cancelled
+
+	c.Done()
+		this channel will be closed when (context is timedout, manually cancelled)
+	c.Err()
+		nil 	-> c.Done() is not closed
+		context.DeadlineExceeded -> c.Done() is closed bcz of timeout/deadline
+		context.Canceled -> c.Done() is closed due to manual cancel
+
+*/
+
+------------------------------------------------------------------------------------------------------
+//packaging in golang 
+
+folder/
+	shiva.go --> package folder 
+	//import folder "project/folder"
+
+	parents/
+		mother.go --> package folder (we have put same pkg_name as parent folder)
+		//import parents "project/folder/parents"
+
+	children/
+		daugter.go --> package children (diff pkg_name from parent folder) 
+		//import child "project/folder/children"
+
+	friends/
+		surya.go --> package dost (diff pkg_name from parent folder - but folder_name != pkg_name) - which is fine  
+		//import yaar "project/folder/friends"
+		//Notice that pkg name is not used in the import also
+		//in the import we only use folder names 
+		//common practice is that folder_name = pkg_name (but not mandatory)
+
+
+------------------------------------------------------------------------------------------------------
+a single go prg is a process which has mutliple goroutines
+
+these go routines may be bundled into threads → by the Go scheduler
+```
+eg : there are 16 goroutines 
+ur cpu has 2 physical cores → 2*2 logical cores → 4 cores → 4 threads
+and each thread can handle 4 goroutines concurrently
+thread 1 → go1 go2 go3 go4
+thread 2→ go4 go5 go6 go7
+```
+within each thread all the go routines work concurrently
+
+and all threads run lly
+
+all these go routines bundling in thread are managed by `go scheduler`
+------------------------------------------------------------------------------------------------------
+
+
+/*
+SIGHUP	1	Hang up detected on controlling terminal or death of controlling process (closing the termianl)
+SIGINT	2	Issued if the user sends an interrupt signal (Ctrl + C)
+SIGQUIT	3	Issued if the user sends a quit signal (Ctrl + D)
+SIGKILL	9	If a process gets this signal it must quit immediately and will not perform any clean-up operations
+SIGTERM	15 Software termination signal (sent by kill by default)
+
+os.Interrupt, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+*/
+
+func gracefull_shutdown() {
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT)
+	defer cancel()
+	<-ctx.Done()
+}
+
+------------------------------------------------------------------------------------------------------
+//error wrapping
+var myerror = errors.New("myerror")
+
+func wrapping_error() {
+	err := geterr(1)
+	if errors.Is(err, myerror) {
+		fmt.Println(err.Error())                //myerror: given 1
+		fmt.Println(errors.Unwrap(err).Error()) //myerror
+		return
+	}
+}
+
+func geterr(i int) error {
+
+	if i == 1 {
+		return fmt.Errorf("%w: given 1", myerror)
+	}
+	return fmt.Errorf("normal error")
+}
+
+------------------------------------------------------------------------------------------------------
+//label break
+package main
+
+import "fmt"
+
+func main() {
+	matrix := [][]int{
+		{1, 2, 3},
+		{4, 5, 6},
+		{7, 8, 9},
+	}
+
+	target := 5
+
+Search:
+	for i := range matrix {
+		for j := range matrix[i] {
+			if matrix[i][j] == target {
+				fmt.Printf("Found at [%d][%d]\n", i, j)
+				break Search
+			}
+		}
+	}
+
+	fmt.Println("Done")
+}
+------------------------------------------------------------------------------------------------------
+func consume_channel(ch chan int) {
+	for {
+		n, ok := <-ch
+		if !ok {
+			break
+		}
+		fmt.Println("n = ", n)
+	}
+}
+func consume_channel_range(ch chan int) {
+	for n := range ch {
+		fmt.Println("n = ", n)
+	}
+}
+------------------------------------------------------------------------------------------------------
+
+// passing channel as writeonly channel
+func write_only(c chan<- int) {
+	fmt.Println("chan c can only be used as write only channel")
+	c <- 2
+}
+
+// passing channel as readonly channel
+func read_only(c <-chan int) {
+	fmt.Println("chan c can only be used as read only channel")
+	<-c
+}
+------------------------------------------------------------------------------------------------------
+
+func atomics() {
+	var x int32 = 1
+	atomic.AddInt32(&x, 1)
+	atomic.StoreInt32(&x, 1)
+	val := atomic.LoadInt32(&x)
+}
+
+------------------------------------------------------------------------------------------------------
+var x = 0
+
+func increment(wg *sync.WaitGroup, ch chan bool) {
+	ch <- true //another go routine cannot write into this since buffered channel of length = 1
+	x = x + 1
+	<-ch
+	wg.Done()
+}
+func main() {
+	var w sync.WaitGroup
+	/*
+		it cannot be un-buffered channel bcz all the go-routines are writing into channel and there is no go-routine which is reading
+		so, dead lock
+	*/
+	ch := make(chan bool, 1) //buffered channel of len=1 (IMP)
+	defer close(ch)
+	for i := 0; i < 1000; i++ {
+		w.Add(1)
+		go increment(&w, ch)
+	}
+	w.Wait()
+	fmt.Println("final value of x", x)
+}
+------------------------------------------------------------------------------------------------------
+// limiting number of go-routines
+// max go-routines
+func main() {
+	maxGoroutines := 10
+	rateLimit := make(chan struct{}, maxGoroutines)
+	for i := 0; i < 100; i++ {
+		rateLimit <- struct{}{}
+		go func(i int) {
+			defer func() { <-rateLimit }()
+			// Simulate work
+		}(i)
+	}
+}
+
+// max go-routines using errgroup
+func main() {
+	eg := &errgroup.Group{}
+	eg.SetLimit(100) //this will ensure that at any point only 100 routines are present
+	for range 10_000 {
+		eg.Go(func() error {
+			return nil
+		})
+	}
+	//waits for all routines to be completed even if one results into error (not panic ha)
+	//returns the first error observed in go-routines
+	err := eg.Wait()
+	if err != nil {
+		fmt.Println("error: ", err.Error())
+	}
+}
+
+// V. V. IMP : 
+g, ctx := errgroup.WithContext(ctx) //if one go-routine throws error, all go-routines will stop and exit & g.wait() return first error seen
+g := &errgroup.Group{} //if one go-routine throws error, it will allow other go-routines to complete and & return the first error seen
+
+
+
+------------------------------------------------------------------------------------------------------
+
+
+type Person struct {
+	Count      int
+	sync.Mutex //mutex should always be non-pointer
+	/*
+		if you say *sync.Mutex
+		then while creating p := Person{}, you have to exclusively say p.Mutex = &sync.Mutex{}
+	*/
+}
+
+var (
+	p  = &Person{}
+	wg sync.WaitGroup
+)
+
+func main() {
+
+	for i := 0; i < 1000; i++ {
+		wg.Add(1)
+		go incr()
+	}
+	wg.Wait()
+	fmt.Println("count = ", p.Count)
+}
+func incr() {
+
+	defer wg.Done()
+	p.Lock()
+	p.Count += 1
+	p.Unlock()
+}
+
+------------------------------------------------------------------------------------------------------
+func select_(ch chan int) {
+	select {
+	case <-time.After(time.Second):
+		fmt.Println("waited for second")
+	case ch <- 1: //select not only wait for the channel read, but also waits for the channel write
+		fmt.Println("had put values")
+	default:
+		fmt.Println("default")
+	}
+	fmt.Println("--select DONE--")
+
+}
+
+------------------------------------------------------------------------------------------------------
+
+//worker pool
+func main() {
+	wg := &sync.WaitGroup{}
+	workers := 10
+	jobs := make(chan int, 100)
+	results := make(chan int, 100)
+
+	//read from the channel (i.e run the workers)
+	for range workers {
+		wg.Add(1)
+		go work(wg, jobs, results)
+	}
+
+	//read from results channel
+	doneReading := make(chan struct{})
+	go read_results(results, doneReading)
+
+	//put jobs into the channel
+	for range 10_000 {
+		jobs <- 1
+	}
+	close(jobs)
+	wg.Wait()
+	close(results) //close results after all workers done with the jobs
+	<-doneReading  //if we dont have this, right after we close the channel we are exiting main without waiting for draining the results channel
+	fmt.Println("main DONE")
+
+}
+
+func work(wg *sync.WaitGroup, jobs, results chan int) {
+	defer wg.Done()
+	for val := range jobs {
+		res := val * val
+		results <- res
+	}
+	//working ...
+}
+
+func read_results(results chan int, doneReading chan struct{}) {
+	for val := range results {
+		_ = val
+	}
+	doneReading <- struct{}{}
+}
+
+------------------------------------------------------------------------------------------------------
+
+func main() {
+	wg := &sync.WaitGroup{}
+	workers := 10
+	jobs := make(chan int, 100)
+	results := make(chan int, 100)
+
+	//read from the channel (i.e run the workers)
+	for range workers {
+		wg.Add(1)
+		go work(wg, jobs, results)
+	}
+
+	//read from results channel
+	readerWg := &sync.WaitGroup{}
+	readerWg.Add(1)
+	go read_results(results, readerWg)
+
+	//put jobs into the channel
+	for range 10_000 {
+		jobs <- 1
+	}
+	close(jobs)
+	wg.Wait()
+	close(results)  //close results after all workers done with the jobs
+	readerWg.Wait() //instead of a signal channel we are using wg bcz we want multiple results reader goroutines 
+	fmt.Println("main DONE")
+
+}
+
+func work(wg *sync.WaitGroup, jobs, results chan int) {
+	defer wg.Done()
+	for val := range jobs {
+		res := val * val
+		results <- res
+	}
+	//working ...
+}
+
+func read_results(results chan int, readerWg *sync.WaitGroup) {
+	defer readerWg.Done()
+	for val := range results {
+		_ = val
+	}
+}
+
+
+------------------------------------------------------------------------------------------------------
+
+func main() {
+
+	f1()
+	f2()
+}
+
+func f1() {
+	ch := make(chan int, 3)
+	ch <- 1
+	ch <- 1
+	close(ch)
+	for range 3 {
+		val := <-ch
+		fmt.Println(val)
+	}
+}
+
+func f2() {
+	ch := make(chan int, 3)
+	ch <- 1
+	ch <- 1
+	close(ch)
+	for range 3 {
+		val, ok := <-ch
+		if !ok {
+			return
+		}
+		fmt.Println(val)
+	}
+}
+
+------------------------------------------------------------------------------------------------------
+//pipeline 
+func main() {
+	recordsC, err := readCSV("file1.csv")
+	if err != nil {
+		log.Fatalf("Could not read csv %v", err)
+	}
+
+	for val := range sanitize(titleize(recordsC)) {
+		fmt.Printf("%v\n", val)
+	}
+}
+
+// Read values
+func readCSV(file string) (<-chan []string, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return nil, fmt.Errorf("opening file %w\n", err)
+	}
+
+	ch := make(chan []string)
+
+	go func() {
+		cr := csv.NewReader(f)
+		cr.FieldsPerRecord = 3
+
+		for {
+			record, err := cr.Read()
+			if errors.Is(err, io.EOF) {
+				close(ch)
+
+				return
+			}
+
+			ch <- record
+		}
+	}()
+
+	return ch, nil
+}
+
+// Remove "invalid" records
+func sanitize(strC <-chan []string) <-chan []string {
+	ch := make(chan []string)
+
+	go func() {
+		for val := range strC {
+			if len(val[0]) > 3 {
+				fmt.Println("skipped ", val)
+				continue
+			}
+
+			ch <- val
+		}
+
+		close(ch)
+	}()
+
+	return ch
+}
+
+// Modify received values
+func titleize(strC <-chan []string) <-chan []string {
+	ch := make(chan []string)
+
+	go func() {
+		for val := range strC {
+			val[0] = strings.Title(val[0])
+			val[1], val[2] = val[2], val[1]
+
+			ch <- val
+		}
+
+		close(ch)
+	}()
+
+	return ch
+}
+
+------------------------------------------------------------------------------------------------------
+//enum
+type day int
+
+const (
+	mon day = iota
+	tue
+	wed
+)
+
+func (d day) string() string {
+	switch d {
+	case 0:
+		return "MONDAY"
+	case 1:
+		return "TUESDAY"
+	case 3:
+		return "WEDNSDAY"
+
+	}
+	return ""
+}
+
+func getDayFromString(ip string) day {
+	switch ip {
+	case "MONDAY":
+		return mon
+	case "TUESDAY":
+		return tue
+	case "WEDNESDAY":
+		return wed
+	}
+	return mon //default
+}
+
+func enum_test() {
+	d := tue
+	fmt.Println(d.string())
+}
+------------------------------------------------------------------------------------------------------
+//http API testing 
+
+func run_gin_server() {
+	router := setup()
+	log.Fatalln(router.Run(":8087"))
+}
+
+func setup() *gin.Engine {
+	router := gin.Default()
+	router.GET("/", Homegin)
+	return router
+}
+func Homegin(c *gin.Context) {
+	c.String(http.StatusOK, "hello from gin")
+}
+
+func TestHomegin(t *testing.T) {
+	router := setup()
+
+	request, _ := http.NewRequest(http.MethodGet, "/", nil)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, request)
+
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, "hello from gin", response.Body.String())
+
+}
+
+// ------------------
+func run_normal_server() {
+	http.HandleFunc("/", Homenormal)
+	log.Fatalln(http.ListenAndServe(":8081", nil))
+}
+
+func Homenormal(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("hello from normal"))
+}
+
+func TestHomenormal(t *testing.T) {
+	request, _ := http.NewRequest(http.MethodGet, "/", nil)
+	response := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(Homenormal)
+	handler.ServeHTTP(response, request)
+
+	assert.Equal(t, http.StatusOK, response.Code)
+	assert.Equal(t, "hello from normal", response.Body.String())
+
+}
+
+------------------------------------------------------------------------------------------------------

@@ -1,0 +1,6 @@
+- a.b.c
+    - a = header = which algo we want to use
+    - b = payload = user claims
+    - c = hash of payload+secret using the algo mentioned in (a=header)
+- if someone takes the JWT token and puts in [jwt.io](http://jwt.io) they will be able to see the payload and headers(which algo is used for hashing) but could not alter the payload and use it because they need secret which is present in server to generate the third part(c)
+- since people can see the payload - make sure that username, passwords are not part of claims - you can put userID, something like that

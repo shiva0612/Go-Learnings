@@ -1,0 +1,7 @@
+protoc --encode=Simple simple.proto > simple.bin
+
+cat simple.bin | protoc --decode_raw
+cat simple.bin | protoc --decode=Simple simple.proto > simple.txt
+
+
+

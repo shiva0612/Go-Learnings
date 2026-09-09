@@ -1,0 +1,43 @@
+
+
+bad : 
+    f, _ := os.Create("output.txt")
+    for i := 0; i < 10000; i++ {
+        f.Write([]byte("line\n"))
+    }
+
+good :
+    f, _ := os.Create("output.txt")
+    buf := bufio.NewWriter(f)
+    for i := 0; i < 10000; i++ {
+        buf.WriteString("line\n")
+    }
+    buf.Flush() // ensure all buffered data is written
+
+same for reading
+    reader := bufio.NewReaderSize(f, 32*1024) // 32 KB buffer for input
+-----------------------------------------------------------------------------------------------
+
+❌ Bad Way — Loading Everything into Memory
+
+func StreamData(src io.Reader, dst io.Writer) error {
+    data, err := io.ReadAll(src)  // Reads ENTIRE source into RAM
+    if err != nil {
+        return err
+    }
+    _, err = dst.Write(data)
+    return err
+}
+
+
+✅ Good way to deal this 
+
+func StreamData(src io.Reader, dst io.Writer) error {
+    buf := make([]byte, 4096) // Reusable buffer
+    _, err := io.CopyBuffer(dst, src, buf)
+    return err
+}
+
+- Only 4KB in memory at any time regardless of file size
+- Can stream a 10GB file without loading it all into RAM
+- Buffer gets reused on each read/write cycle
