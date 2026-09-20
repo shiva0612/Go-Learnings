@@ -2,11 +2,12 @@
 /*
 	1bit
 	1byte = 8bits
+	internets speed 1kbps = 1kilo bits /sec = 1024 bits/sec => 1024/8=128bytes/sec
 
-	1024bits = 1kbits --> internets speed 1kbps = 1kilo bits /sec = 1024 bits/sec => 1024/8=128bytes/sec
-	1024*1024bits = 1mbits - 10^6
-	1024*1024*1024bits = 1gbits - 10^9
-	1024*1024*1024*1024bits = 1tbits - 10^12
+	1024bits = 1kbits - 10^3 in decimal / binary : 2^10 / 1<<10
+	1024*1024bits = 1mbits - 10^6 in decimal / binary : 2^20  / 1<<20
+	1024*1024*1024bits = 1gbits - 10^9 in decimal / binary : 2^30 / 1<<30
+	1024*1024*1024*1024bits = 1tbits - 10^12 in decimal / binary : 2^40 / 1<<40
 
 	1024bytes = 1kBytes
 	1024*1024bytes = 1mBytes
@@ -62,14 +63,11 @@ func bitwise_op() {
 }
 
 --------------------------------------------------------------------------------------------
-var a int // in 32 bit system is 32/8 = 4 bytes 
-var a int // in 64 bit system is 64/8 = 8 bytes 
-
 /*
 
 	int32
-	Minimum value (-2^31) in binary:  - 10000000 00000000 00000000 00000000
-	Maximum value (2^31 - 1) in binary: 01111111 11111111 11111111 11111111
+	Maximum value (2^31 - 1) in binary: 01111111 11111111 11111111 11111111 (first bit is sign bit)
+	Minimum value (-2^31) in binary:  - 10000000 00000000 00000000 00000000 (no sign bit)
 
 	while storing positive value max you store is 2^31 - 1
 	here the first bit is 0
@@ -83,6 +81,9 @@ var a int // in 64 bit system is 64/8 = 8 bytes
 */
 
 --------------------------------------------------------------------------------------------
+var a int // in 32 bit system is 32/8 = 4 bytes 
+var a int // in 64 bit system is 64/8 = 8 bytes 
+
 What "64-bit system" actually means for pointers
 
 When we call a system "64-bit," the most relevant thing for this discussion is: the native word size is 64 bits,
@@ -121,9 +122,9 @@ type sliceHeader struct {
 /*
 so entire slice is of 8+8+8 = 24 bytes
 above map has
- 	100 * 8 bytes = 800 bytes
-    100 * 24 bytes = 2400 bytes
-	total          = 3200 bytes
+ 	100 * 8 bytes for key (int)      = 800 bytes
+    100 * 24 bytes for value ([]byte)= 2400 bytes
+	total                            = 3200 bytes
 
 and the actual size is stored in the heap
 */
@@ -149,7 +150,7 @@ func simple() {
 	var a, b float64
 	a, b = 0.1, 0.2
 	sum := a + b
-	fmt.Println(sum)          //0.30000000000000004 -> reason -> decimal numbers are represented in binary accurately
+	fmt.Println(sum)          //0.30000000000000004 -> reason -> decimal numbers are not represented in binary accurately
 	fmt.Printf("%.1f\n", sum) //0.3 -> every time you print use this notation
 }
 
@@ -275,11 +276,11 @@ func create_append_file() {
 	if err != nil {
 		panic(err)
 	}
-	_, err = os.OpenFile("op.go", os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0600)
+	_, err = os.OpenFile("op.go", os.O_TRUNC|os.O_WRONLY|os.O_CREATE, 0600) //remove all content & write fresh
 	if err != nil {
 		panic(err)
 	}
-	_, err = os.OpenFile("op.go", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	_, err = os.OpenFile("op.go", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600) //append the writes
 	if err != nil {
 		panic(err)
 	}
@@ -289,7 +290,7 @@ func create_append_file() {
 clear(m) # m is map - it shall actually clear the map len(m) after this is 0
 
 clear(s) # s is slice, s=[1,2,3] after clear it shall be [0,0,0]
-
+------------------------------------------------------------------------------------
 
 // After filling and processing...
 Important - this will explain why u need to use a[:0] instead of clear
@@ -374,9 +375,10 @@ folder/
 	friends/
 		surya.go --> package dost (diff pkg_name from parent folder - but folder_name != pkg_name) - which is fine  
 		//import yaar "project/folder/friends"
-		//Notice that pkg name is not used in the import also
-		//in the import we only use folder names 
-		//common practice is that folder_name = pkg_name (but not mandatory)
+		
+//Notice that pkg name is not used in the import also
+//in the import we only use folder names 
+//common practice is that folder_name = pkg_name (but not mandatory)
 
 
 ------------------------------------------------------------------------------------------------------
@@ -466,7 +468,8 @@ Search:
 func consume_channel(ch chan int) {
 	for {
 		n, ok := <-ch
-		if !ok {
+		//if channel is closed & you dont put this condition it will still continue in the loop with default value 0
+		if !ok { 
 			break
 		}
 		fmt.Println("n = ", n)
@@ -524,7 +527,7 @@ func main() {
 	fmt.Println("final value of x", x)
 }
 ------------------------------------------------------------------------------------------------------
-// limiting number of go-routines
+// SEMAPHORE : limiting number of go-routines
 // max go-routines
 func main() {
 	maxGoroutines := 10
@@ -547,7 +550,7 @@ func main() {
 			return nil
 		})
 	}
-	//waits for all routines to be completed even if one results into error (not panic ha)
+	//waits for all routines to be completed even if one results into error (it does not panic)
 	//returns the first error observed in go-routines
 	err := eg.Wait()
 	if err != nil {
@@ -556,40 +559,69 @@ func main() {
 }
 
 // V. V. IMP : 
-g, ctx := errgroup.WithContext(ctx) //if one go-routine throws error, all go-routines will stop and exit & g.wait() return first error seen
 g := &errgroup.Group{} //if one go-routine throws error, it will allow other go-routines to complete and & return the first error seen
 
+------------------------------------------------------------------------------------------------------
 
+func main() {
+	ctx := context.Background()
+
+	g, ctx := errgroup.WithContext(ctx) //this is used to cancel all go-routines if one fails, but only if ctx is handled 
+
+	//here ctx.Done() is not handled - so keeps running if task 2 fails
+	g.Go(func() error {
+		fmt.Println("Task 1 started")
+
+		time.Sleep(10 * time.Second)
+
+		fmt.Println("Task 1 finished")
+		return nil
+	})
+
+	g.Go(func() error {
+		fmt.Println("Task 2 started")
+
+		time.Sleep(1 * time.Second)
+
+		fmt.Println("Task 2 failed")
+		return fmt.Errorf("task 2 failed")
+	})
+
+	//this is checking ctx, so its return once task 2 fails
+	g.Go(func() error {
+		fmt.Println("Task 3 started")
+
+		for {
+			select {
+			case <-ctx.Done():
+				fmt.Println("Task 3 stopping")
+				return ctx.Err()
+
+			case <-time.After(500 * time.Millisecond):
+				fmt.Println("Task 3 working...")
+			}
+		}
+	})
+
+	err := g.Wait()
+
+	fmt.Println("Error:", err)
+}
 
 ------------------------------------------------------------------------------------------------------
 
 
 type Person struct {
 	Count      int
-	sync.Mutex //mutex should always be non-pointer
-	/*
-		if you say *sync.Mutex
-		then while creating p := Person{}, you have to exclusively say p.Mutex = &sync.Mutex{}
-	*/
+	sync.Mutex //mutex you can use without pointer also no issues
+
+	//with pointer you will have to like
+	//mu *sync.Mutex 
+	//mu = &sync.Mutex{}
+	//so, better go without pointer approach
 }
 
-var (
-	p  = &Person{}
-	wg sync.WaitGroup
-)
-
-func main() {
-
-	for i := 0; i < 1000; i++ {
-		wg.Add(1)
-		go incr()
-	}
-	wg.Wait()
-	fmt.Println("count = ", p.Count)
-}
 func incr() {
-
-	defer wg.Done()
 	p.Lock()
 	p.Count += 1
 	p.Unlock()
@@ -633,7 +665,7 @@ func main() {
 		jobs <- 1
 	}
 	close(jobs)
-	wg.Wait()
+	wg.Wait() 
 	close(results) //close results after all workers done with the jobs
 	<-doneReading  //if we dont have this, right after we close the channel we are exiting main without waiting for draining the results channel
 	fmt.Println("main DONE")
@@ -825,6 +857,10 @@ const (
 	tue
 	wed
 )
+
+func (d day) string() string {
+	return [...]string{"Monday","Tuesday","Wednesday"}[d]
+}
 
 func (d day) string() string {
 	switch d {

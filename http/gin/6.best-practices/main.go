@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"io"
 	"os"
 
@@ -23,4 +24,8 @@ func best_practice(c *gin.Context) {
 	serviceLayer(ctx)
 
 	//always use server.shutdown for graceful shutdown in http servers
+}
+
+func serviceLayer(ctx context.Context) {
+	//some businesss logic implementation
 }
